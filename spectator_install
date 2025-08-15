@@ -1,0 +1,25 @@
+#spectator
+
+#_user
+
+WINEPREFIX=~/.wine.spec WINEARCH=win32 wine wineboot
+WINEPREFIX=~/.wine.spec winetricks mdac28
+WINEPREFIX=~/.wine.spec winetricks jet40
+
+cp /tmp/spectator/dao2535.tlb "$HOME/.wine.spec/drive_c/Program Files/Common Files/Microsoft Shared/dao/"
+cp /tmp/spectator/spectator0.desktop "$HOME/Рабочий стол/"
+
+
+#_root
+
+cat << '_EOF_' >  /usr/bin/run_spectator.sh
+#!/bin/sh
+
+env WINEPREFIX=$HOME/.wine.spec wine cpcsp_proxy_setup.exe.so one1 two1 three1
+
+cd "$HOME/.wine.spec/drive_c/spectator/"
+env WINEPREFIX=$HOME/.wine.spec wine Spectator.exe
+_EOF_
+
+cp /tmp/spectator/run_spectator.sh /usr/bin/
+chmod +x /usr/bin/run_spectator.sh

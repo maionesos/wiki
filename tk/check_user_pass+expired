@@ -1,0 +1,12 @@
+#!/bin/bash
+
+tk_user="
+username 1
+username 2"
+
+while read -r username password; do
+    echo "Проверка пользователя: $username" >> /tmp/tk_user_check
+    echo "Пароль пользователя: $password" >> /tmp/tk_user_check
+        chage -l "$username" | grep 'Срок действия учётной записи истекает' >> /tmp/tk_user_check
+    echo "" >> /tmp/tk_user_check
+done <<< "$tk_user"

@@ -1,0 +1,74 @@
+#wine-10.9.1-eter1astra
+
+#убрать заставку
+sed 's/#WINEDISABLEETERSPLASH/WINEDISABLEETERSPLASH/' -i /etc/wine-etersoft/wine-etersoft.conf 
+
+WINEARCH=win64 wineboot
+
+#Убедится что правильные пути
+/usr/bin/cpcsp_proxy_setup
+
+#после каждого дотнета ждать ~30 минут
+winetricks dotnet48
+winetricks ie8
+
+#win7 - Вид "без темы"
+winecfg
+
+Отключаем обновление префикса:
+echo disable > .wine/.update-timestamp
+
+#Устанавливаем MS Office Enterprise_2007 w32
+#serial:
+#H3DHK-MY7XK-BJYC6-8X3TX-9694J
+#TQ3MW-7T7XH-D8J77-M36WD-TW8B6
+
+rm -rf .wine/driver_c/MSOCache
+
+
+cp -r /etc/skel/.wine/drive_c/Vitacore/ .wine/drive_c/
+
+#Проверить что прописалось предпоследней строкой 
+.wine/drive_c/Vitacore/AIS\ LPU\ Client/AKUZ.UserArm.exe.config
+.wine/drive_c/Vitacore/AIS\ LPU\ Client/Update/AKUZ.UpdateUtility.exe.config
+.wine/drive_c/Vitacore/AIS\ LPU\ Client/Update/UpdateUtility.exe.config
+
+ <startup useLegacyV2RuntimeActivationPolicy="true">
+    <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.8"/>
+  </startup>
+
+#не забыть шрифты
+cp /etc/skel/.wine/drive_c/windows/Fonts/* .wine/drive_c/windows/Fonts/
+
+#Для астры не забыть admin1
+cd .wine/drive_c/users/user
+rm -rf Desktop Documents Downloads Music Pictures Videos
+rm -rf AppData/Roaming/Microsoft/Windows
+ln -s ../../../../"Рабочий стол" Desktop
+ln -s ../../../../"Загрузки" Downloads
+ln -s ../../../../"Документы" Documents
+ln -s ../../../../"Документы/Музыка/" Music
+ln -s ../../../../"Документы/Изображения/" Pictures
+ln -s ../../../../"Документы/Видео/" Videos
+ln -s ../../../../Templates/ Templates
+
+#Удаление мусора
+cd ~
+rm -f .wine/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/SetupCache/v4.8.03761/NetFx_Full_x64.msi
+rm -f .wine/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/SetupCache/v4.8.03761/NetFx_Full.mzz
+rm -f .wine/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/SetupCache/Client/Windows6.0-KB956250-v6001-x64.msu
+#Папка пользователя
+rm -f .wine/drive_c/users/user/AppData/Local/Temp/Microsoft\ .NET\ Framework\ 4*Setup_*.html
+
+
+#Предварительно запускаем Office
+wine 'C:\Program Files (x86)\Microsoft Office\Office12\WINWORD.EXE'
+wine 'C:\Program Files (x86)\Microsoft Office\Office12\EXCEL.EXE'
+
+#Внести все нужные патчи в реестр с помощью fix_reg.tar.gz
+for i in *reg;do wine reg import $i;done
+
+#Выбрать исходя из системы
+sed -i 's/admin1/%user%/g' .wine/{system,userdef,user}.reg
+sed -i 's/user/%user%/g' .wine/{system,userdef,user}.reg
+

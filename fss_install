@@ -1,0 +1,37 @@
+#fss
+
+WINEARCH=win64 wineboot
+
+
+winetricks dotnet40
+/usr/bin/cpcsp_proxy_setup
+
+
+#Удалил кеш установки x64
+rm -rf .wine/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/SetupCache/
+#Для x32
+rm -rf .wine/drive_c/windows/Microsoft.NET/Framework/v4.0.30319/SetupCache/
+
+
+Отключаем обновление префикса:
+echo disable > .wine/.update-timestamp
+
+#win7 - Вид "без темы"
+winecfg
+
+#Устанавливаем ФСС х64 версии
+
+cd .wine.fss/drive_c/FssArmErs/
+cp ../windows/Microsoft.NET/Framework/v4.0.30319/RegAsm.exe .
+WINEPREFIX=~/.wine.fss wine RegAsm.exe /registered GostCryptography.dll
+ls GostCryptography.dll
+
+wine ../windows/Microsoft.NET/Framework/v4.0.30319/RegAsm.exe /registered GostCryptography.dll
+
+#cd C:\FssArmMchd
+#C:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /registered MchdCryptoServer.dll
+#C:\Windows\Microsoft.NET\Framework\v4.0.30319\RegAsm.exe /registered MchdCryptoServer.dll
+
+
+
+

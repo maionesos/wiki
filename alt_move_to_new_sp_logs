@@ -1,0 +1,149 @@
+
+mkdir -pv /alt/; rm -fv /alt/*; 
+cd /alt/;
+wget -nv --no-cache http://10.11.128.115/.pcstuff/.astra/alt/50_alt \
+http://10.11.128.115/.pcstuff/.astra/alt/initrd.img \
+http://10.11.128.115/.pcstuff/.astra/alt/run.sh \
+http://10.11.128.115/.pcstuff/.astra/alt/vmlinuz \
+http://10.11.128.115/.pcstuff/.astra/alt/alt-sp8-60gb.tar.gz \
+http://10.11.128.115/.pcstuff/.astra/alt/alt-sp8-60gb.tar.gz.md5
+md5sum -c alt-sp8-60gb.tar.gz.md5
+chmod +x ./50_alt run.sh
+cp -v ./50_alt /etc/grub.d/50_alt
+sed 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=saved/' -i /etc/default/grub
+grub-mkconfig -o /boot/grub/grub.cfg
+grub-set-default 'move-to-alt'
+
+######################################################################
+######################################################################
+
+start.sh
+#!/bin/bash
+
+chmod +x ./50_alt run.sh \
+    && cp -v ./50_alt /etc/grub.d/50_alt \
+    && sed 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=saved/' -i /etc/default/grub \
+    && grub-mkconfig -o /boot/grub/grub.cfg \
+    && grub-set-default 'move-to-alt' \
+    && reboot
+
+######################################################################
+######################################################################
+# Добавляем в загрузчик информацию о новом способе загрузки
+# ++ успешно
+
+50_alt
+#! /bin/sh
+set -e
+
+cat << EOF
+menuentry $"Move to ALT SP 8" --id 'move-to-alt' --unrestricted {
+  echo $"Loading Linux vmlinuz ..."
+  linux /alt/vmlinuz changedisk fastboot live changedisk nosplash showopts
+  echo $"Loading initial ramdisk ..."
+  initrd /alt/initrd.img
+}
+EOF
+
+######################################################################
+######################################################################
+######################################################################
+######################################################################
+
+run.sh
+#!/bin/sh
+
+# regenerate initrd by this:
+# find . -print0 | cpio --null --create --verbose --format=newc | gzip --best > /boot/custom-initramfs.cpio.gz
+
+mount -t tmpfs tmpfs /tmp/ -o size=5g
+mount /dev/sda3 /mnt/
+cp -v /mnt/alt/alt-sp8-60gb.tar.gz /tmp/
+umount /mnt/
+
+fdisk /dev/sda << EOF
+g
+n
+
+
++255M
+n
+
+
++8M
+n
+
+
++100G
+n
+
+
++100G
+t
+1
+1
+t
+2
+4
+t
+3
+11
+t
+4
+11
+w
+EOF
+
+mkfs.vfat -n ALTEFI /dev/sda1
+mkfs.ext4 -F -L altmed /dev/sda3
+mkfs.ext4 -F -L althome /dev/sda4
+
+mount /dev/sda3 /mnt/
+mkdir -pv /mnt/home/
+mount /dev/sda4 /mnt/home/
+mkdir -pv /mnt/boot/efi/
+mount /dev/sda1 /mnt/boot/efi/
+cd /mnt/
+tar --numeric-owner -xf /tmp/alt-sp8-60gb.tar.gz || bash
+mount -o bind /dev /mnt/dev/ || bash
+mount -o bind /proc /mnt/proc/ || bash
+mount -o bind /sys /mnt/sys/ || bash
+mount -t efivarfs efivarfs /mnt/sys/firmware/efi/efivars || bash
+
+
+cat << EOF > /mnt/run2.sh || bash
+#!/bin/bash
+
+set -x
+
+grub-install /dev/sda || bash
+grub-mkconfig -o /boot/grub/grub.cfg || bash
+make-initrd -k 5.18.14-un-def-alt1 || bash
+grub-set-default 'ALT 8 SP Workstation, 5.18.14-un-def-alt1' || bash
+cp -r /etc/skel/.wine /home/user/ || bash
+chown user:user /home/user/.wine -R || bash
+apt-get remove -y kernel-image-std-def=4.9.136-alt0.M80C.1 kernel-image-un-def=4.19.59-alt0.M80C.1 || bash
+#reboot || bash
+EOF
+
+chmod +x /mnt/run2.sh || bash
+chroot /mnt/ /run2.sh || bash
+rm -fv /mnt/run2.sh
+#reboot || bash
+#/sbin/shutdown -t3 -r now || bash
+#halt || bash
+
+umount /mnt/home/
+umount /mnt/boot/efi/
+umount /mnt/dev/
+umount /mnt/proc/
+umount /mnt/sys/firmware/efi/efivars/
+umount /mnt/sys/
+
+sync
+sync
+sync
+
+echo s > /proc/sysrq-trigger
+echo u > /proc/sysrq-trigger
+echo b > /proc/sysrq-trigger

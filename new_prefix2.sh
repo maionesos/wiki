@@ -1,0 +1,22 @@
+#/bin/bash
+
+extract_wine_noproxy() {
+
+unset http_proxy https_proxy ftp_proxy no_proxy
+WINEPREFIX=$HOME/.wine2 wine "$@"
+}
+
+
+grep -q -m1 "%user%" "$HOME"/.wine2/{user.reg,system.reg,userdef.reg} && sed "s/%user%/$USER/g" -i "$HOME"/.wine2/{user.reg,system.reg,userdef.reg}
+[ -d "$HOME/.wine2/drive_c/users/$USER/" ] || cp -r "$HOME/.wine2/drive_c/users/user/" "$HOME/.wine2/drive_c/users/$USER/"
+
+/opt/cprocsp/bin/amd64/certmgr -delete -all -store uMy
+/opt/cprocsp/bin/amd64/csptestf -absorb -certs
+WINEPREFIX=$HOME/.wine2 wine reg delete 'HKEY_CURRENT_USER\Software\Microsoft\SystemCertificates\My\Certificates\' /f
+WINEPREFIX=$HOME/.wine2 wine /usr/lib/wine/i386-unix/cpcsp_proxy_setup.exe.so one1 two1 three1
+
+if pgrep -U $USER 'AKUZ.UserArm.ex' >/dev/null ;then
+        extract_wine_noproxy 'c:\Vitacore\AIS LPU Client\AKUZ.UserArm.exe'
+else
+        extract_wine_noproxy 'c:\Vitacore\AIS LPU Client\Update\AKUZ.UpdateUtility.exe' /silent
+fi

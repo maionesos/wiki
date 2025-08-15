@@ -1,0 +1,142 @@
+
+https://repo.zabbix.com/zabbix/6.0/debian/pool/main/z/zabbix-release/zabbix-release_latest_6.0%2Bdebian10_all.deb
+
+apt install zabbix-release
+
+Доп пакеты:
+ttf-dejavu-core libsnmp30 libssh-4
+
+отключаю репы астры, чтобы не поставили версию забикса выше
+
+apt install zabbix-server-pgsql zabbix-agent zabbix-frontend-php zabbix-apache-conf
+
+#
+#apt-get remove --purge zabbix-server-pgsql zabbix-frontend-php zabbix-apache-conf zabbix-agent
+
+
+https://wiki.astralinux.ru/pages/viewpage.action?pageId=38699775
+^^^^
+Обязательные мероприятия
+
+######################################
+
+Правильные права:
+/etc/postgresql/14/main/pg_hba.conf
+
+
+local   all             postgres                                trust
+local   all             zabbix                                  trust
+
+host    zabbix          zabbix          127.0.0.1/32            trust
+
+
+#Настраиваем сервер по подобию
+/etc/zabbix/zabbix_server.conf
+
+
+############ZAbbix_agent############
+Не забыть про локального агента!
+
+https://wiki.astralinux.ru/pages/viewpage.action?pageId=38699775
+
+############Apache############
+
+ cp /etc/zabbix/zabbix.conf.php /mnt/
+перенести на новый сервак и перезапустить службу apache2
+
+В при работе в Astra Linux Special Edition в конфигурационном файле /etc/apache2/apache2.conf указать параметр:
+
+/etc/apache2/apache2.conf
+AstraMode off
+
+systemctl reload apache2
+
+
+
+
+############PostgreSQL############
+
+1) Настройка СУБД PostgreSQL
+Отредактировать конфигурационный файл /etc/postgresql/*/main/pg_hba.conf:
+
+/etc/postgresql/*/main/pg_hba.conf
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   zabbix          zabbix                                  trust
+# IPv4 local connections:
+host    zabbix          zabbix          127.0.0.1/32            trust
+
+
+2) Создать пользователя СУБД zabbix 
+
+Проверил на серваке был ли пароль у пользователя zabbix
+
+psql -U postgres
+
+Вывести список ролей:
+/du
+Посмотреть на пароли:
+SELECT usename, passwd FROM pg_shadow WHERE usename = 'zabbix';
+
+
+Создам пользователя на чистом серваке:
+CREATE USER zabbix;
+
+
+############Установка SSL-сертификата############
+
+??????????????
+
+
+############Проверяем что все работает, но с пустой бд (перед восстановлением)############
+
+??????????????
+
+############Восстанавливаем БД############
+
+psql -U postgres
+CREATE DATABASE zabbix WITH ENCODING='UTF8' OWNER=zabbix;
+GRANT ALL PRIVILEGES ON DATABASE zabbix TO zabbix;
+
+?_Забыл добавить пароль:
+ALTER USER zabbix WITH PASSWORD '12345678';
+
+
+И потом восстанавливаем бд
+psql -U zabbix -d zabbix -f zabbix_backup3.sql
+
+Проверить таблицы
+\l
+
+Если после переноса владелец не поменялся на zabbix:
+ALTER DATABASE zabbix OWNER TO zabbix;
+
+
+systemctl restart postgresql; systemctl restart zabbix-server
+
+
+
+########
+Проверяем
+
+ systemctl restart zabbix-server
+
+
+
+#chech
+systemctl restart zabbix-server;systemctl restart postgresql;systemctl reload apache2;service zabbix-agent restart; systemctl status zabbix-server
+
+Нужно было удалить, создалось с неверными правами:
+/var/log/zabbix-server/zabbix_server.log
+
+
+Удалить бд:
+DROP DATABASE zabbix;
+
+
+Поймал ошибку
+
+The Zabbix database version does not match current requirements. Your database version: 6040000. Required version: 7000000. Please contact your system administrator.
+
+###################
+Включил глобальные скрипты:
+EnableGlobalScripts=1

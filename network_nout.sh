@@ -1,0 +1,2 @@
+#!/bin/bash
+sed -i 's/systemd-udev-settle.service network-pre.target/systemd-udev-settle.service systemd-udev-trigger.service network-pre.target/; s/Wants=network.target/Wants=systemd-udev-settle.service systemd-udev-trigger.service network-pre.target local-fs.target sysinit.target network.target/' -i /lib/systemd/system/network.service
