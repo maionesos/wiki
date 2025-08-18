@@ -187,7 +187,8 @@ if [[ ${check_wine} == ${check_wine2} ]]; then
 fi
 
 env -i wget -nv --no-cache -P /tmp/ http://10.11.128.115/.pcstuff/test/fss/run_fss_wine_10.sh
-mv /tmp/run_fss_wine_10.sh /usr/bin/run_fss.sh
+rm -f /usr/bin/run_fss.sh
+cp /tmp/run_fss_wine_10.sh /usr/bin/run_fss.sh
 chmod 755 /usr/bin/run_fss.sh
 
 env -i wget -nv --no-cache http://10.11.128.115/.pcstuff/gui/icons/fsslogo.ico
