@@ -1,10 +1,19 @@
  #!/bin/bash
 
 if [ $(whoami) = root ] ; then
-	echo
+    echo
 else
-	echo -en "$color1b Нужно открыть скрипт рутом! Установка прервана. $color1e"
-	exit 1
+    echo -en "$color1b Нужно открыть скрипт рутом! Установка прервана. $color1e"
+    exit 1
+fi
+
+#чек версии wine
+check_wine=$(wine --version | head -n1  | awk '{print $1;}' | cut -d "-" -f2)
+wine_check_10="10.10.6"
+
+if [[ ${check_wine} == ${wine_check_10} ]]; then
+  echo "Скрипт не поддерживает версию wine 10.10.6!"
+  exit 1
 fi
 
 LOGFILE=/tmp/fss_install.log
@@ -23,7 +32,7 @@ read inputval
 if test "$inputval" != "yes"
 	then
 	echo -en "$color1b Установка отменена :с $color1e"
-	exit 1
+	exit 0
 fi
 
 user1=$(who | grep '(:0)' | cut -d " " -f1)
@@ -43,7 +52,7 @@ read inputval1
 if test "$inputval1" == "yes"
 then
 	echo -en "$color1b Установка отменена :с $color1e"
-	exit 1
+	exit 0
 elif test "$inputval1" == "del"
 then
 	apt-get remove -y postgresql-common postgresql9.4
@@ -89,7 +98,7 @@ install_bd_postgres() {
     read inputvalBD
 
       if test "$inputvalBD" == "cancel"; then
-        exit 1
+        exit 0
       elif test "$inputvalBD" == "go"
         then
           echo
@@ -159,7 +168,6 @@ install_fss_wine_10() {
 }
 
 #чек версии wine
-check_wine=$(wine --version | head -n1  | awk '{print $1;}' | cut -d "-" -f2)
 check_wine1="8.0.6"
 check_wine2="10.8.1"
 check_bottle=/home/$user1/.wine.fss
@@ -188,7 +196,7 @@ fi
 
 env -i wget -nv --no-cache -P /tmp/ http://10.11.128.115/.pcstuff/test/fss/run_fss_wine_10.sh
 rm -f /usr/bin/run_fss.sh
-cp /tmp/run_fss_wine_10.sh /usr/bin/run_fss.sh
+mv /tmp/run_fss_wine_10.sh /usr/bin/run_fss.sh
 chmod 755 /usr/bin/run_fss.sh
 
 env -i wget -nv --no-cache http://10.11.128.115/.pcstuff/gui/icons/fsslogo.ico
