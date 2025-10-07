@@ -1,6 +1,6 @@
  #!/bin/bash
 
-if [ $(whoami) = root ] ; then
+if [ $(whoami) = root ]; then
     echo
 else
     echo -en "$color1b Нужно открыть скрипт рутом! Установка прервана. $color1e"
@@ -9,17 +9,8 @@ fi
 
 #чек версии wine
 check_wine=$(wine --version | head -n1  | awk '{print $1;}' | cut -d "-" -f2)
-wine_check_10="10.10.6"
 
-if [[ ${check_wine} == ${wine_check_10} ]]; then
-  echo "Скрипт не поддерживает версию wine 10.10.6!"
-  exit 1
-fi
-
-LOGFILE=/tmp/fss_install.log
-exec > >(tee -a $LOGFILE)
-#exec 2>/dev/null
-#exec 2>&1
+exec > /tmp/fss_install.log 2>&1
 
 color1b="\033[37;1;41m"
 color1e="\033[0m"
@@ -37,9 +28,9 @@ fi
 
 user1=$(who | grep '(:0)' | cut -d " " -f1)
 
-
 mkdir /opt/certs
 chmod 777 /opt/certs
+# скачать себе в ГИСТ
 env -i wget -nv --no-cache -P /tmp/ http://lk.fss.ru/sfr_certs_2025/sfr_prod_cert_2025.cer
 mv /tmp/sfr_prod_cert_2025.cer /opt/certs/cert.cer
 
@@ -167,9 +158,36 @@ install_fss_wine_10() {
     fi
 }
 
+install_fss_wine_10.2() {
+    echo -en "$color2b Выберите номер программы: ФСС ЭРС - 1; ФСС ЭЛН - 2: $color2e"
+    read inputval5
+    if [ "$inputval5" == "1" ]; then
+        su - ${user1} -c "env -i wget --progress=bar:force --no-cache -P /tmp/ http://10.11.128.115/.pcstuff/test/fss/fss_ers_setup_3_0_42_20250902_01_x64.exe"
+        su - ${user1} -c "cp -r /etc/skel/.wine /home/'$user1'/.wine.fss"
+        su - ${user1} -c "rm -rf /home/'$user1'/.wine.fss/drive_c/Vitacore/"
+        su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/var/run/lightdm/user/xauthority WINEPREFIX=~/.wine.fss wine /tmp/fss_ers_setup_3_0_42_20250902_01_x64.exe"
+        su - ${user1} -c "cd ~/.wine.fss/drive_c/FssArmErs/ && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll"
+        rm -f /tmp/fss_ers_setup_3_0_42_20250902_01_x64.exe
+        if [ -f "$test_file" ]; then
+            install_bd_for_ers
+        fi
+    elif [ "$inputval5" == "2" ]; then
+        su - ${user1} -c "env -i wget --progress=bar:force --no-cache -P /tmp/ http://10.11.128.115/.pcstuff/test/fss/fss_eln_setup_2_01_26_20250902_01_x64.exe"
+        su - ${user1} -c "cp -r /etc/skel/.wine /home/'$user1'/.wine.fss"
+        su - ${user1} -c "rm -rf /home/'$user1'/.wine.fss/drive_c/Vitacore/"
+        su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/var/run/lightdm/user/xauthority WINEPREFIX=~/.wine.fss wine /tmp/fss_eln_setup_2_01_26_20250902_01_x64.exe"
+        su - ${user1} -c "cd ~/.wine.fss/drive_c/FssArmErs/ && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll"
+        rm -f /tmp/fss_eln_setup_2_01_26_20250902_01_x64.exe
+        if [ -f "$test_file" ]; then
+            install_bd_for_eln
+        fi
+    fi
+}
+
 #чек версии wine
 check_wine1="8.0.6"
 check_wine2="10.8.1"
+check_wine3="10.10.6"
 check_bottle=/home/$user1/.wine.fss
 
 if [[ ${check_wine} == ${check_wine1} ]]; then
@@ -192,6 +210,17 @@ if [[ ${check_wine} == ${check_wine2} ]]; then
     mv /home/${user1}/.wine.fss /home/${user1}/.wine.fss.bak$1
   fi
   install_fss_wine_10
+fi
+
+if [[ ${check_wine} == ${check_wine3} ]]; then
+  if [[ -d $check_bottle ]]; then
+    i=1
+    while [ -d $check_bottle$i ]; do
+      i=$((i+1))
+    done
+    mv /home/${user1}/.wine.fss /home/${user1}/.wine.fss.bak$1
+  fi
+  install_fss_wine_10.2
 fi
 
 env -i wget -nv --no-cache -P /tmp/ http://10.11.128.115/.pcstuff/test/fss/run_fss_wine_10.sh
@@ -222,6 +251,7 @@ rm -f "/home/'$user1'/.local/share/applications/wine/Programs/СФР АРМ ЛП
 rm -f "/home/'$user1'/.local/share/applications/wine/Programs/СФР АРМ ЛПУ(ЭРС)"
 rm -f /home/$user1/.local/share/applications/wine/Programs/wine-Programs-СФР*
 rm -f /home/$user1/Рабочий\ стол/СФР\ АРМ\ ЛПУ.desktop
+rm -f /home/$user1/Рабочий\ стол/СФР\ АРМ\ ЛПУ\(ЭРС\).desktop
 rm -f /home/$user1/wine.fss.*.tar.gz
 
 echo -en "ФСС Установлено!"

@@ -2,16 +2,29 @@
 
 WINEARCH=win64 wineboot
 
+cd .wine/drive_c/users/user{admin1}
+rm -rf Desktop Documents Downloads Music Pictures Videos Saved\ Games/
+rm -rf AppData/Roaming/Microsoft/Windows
+ln -s ../../../../"Рабочий стол" Desktop
+ln -s ../../../../"Загрузки" Downloads
+ln -s ../../../../"Документы" Documents
+ln -s ../../../../"Документы/Музыка/" Music
+ln -s ../../../../"Документы/Изображения/" Pictures
+ln -s ../../../../"Документы/Видео/" Videos
+cd ..
+cp -r admin1 user
 
+#Ждать по 30 минут после каждой устновки dotnet
 winetricks dotnet40
+
+# wine 10
 /usr/bin/cpcsp_proxy_setup
 
-
-#Удалил кеш установки x64
-rm -rf .wine/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/SetupCache/
-#Для x32
-rm -rf .wine/drive_c/windows/Microsoft.NET/Framework/v4.0.30319/SetupCache/
-
+# astra
+wine /usr/lib32/i386-linux-gnu/wine-etersoft/i386-unix/cpcsp_proxy_setup.exe.so
+cd .wine/drive_c/windows/system32/
+ln -svf /usr/lib32/i386-linux-gnu/wine-etersoft/i386-unix/cpcsp_proxy.dll.so cpcsp_proxy.dll.so
+ln -svf /usr/lib32/i386-linux-gnu/wine-etersoft/i386-unix/cpcsp_proxy.dll.so cpcsp_proxy.dll
 
 Отключаем обновление префикса:
 echo disable > .wine/.update-timestamp
@@ -21,17 +34,38 @@ winecfg
 
 #Устанавливаем ФСС х64 версии
 
-cd .wine.fss/drive_c/FssArmErs/
-cp ../windows/Microsoft.NET/Framework/v4.0.30319/RegAsm.exe .
-WINEPREFIX=~/.wine.fss wine RegAsm.exe /registered GostCryptography.dll
-ls GostCryptography.dll
-
-wine ../windows/Microsoft.NET/Framework/v4.0.30319/RegAsm.exe /registered GostCryptography.dll
+cd .wine.fss/drive_c/Fss*/
+WINEPREFIX=~/.wine.fss wine ../windows/Microsoft.NET/Framework/v4.0.30319/RegAsm.exe /registered GostCryptography.dll
+# 64 разрядность!
+WINEPREFIX=~/.wine.fss wine ../windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll
 
 #cd C:\FssArmMchd
+#WINEPREFIX=~/.wine.fss wine ../windows/Microsoft.NET/Framework/v4.0.30319/RegAsm.exe /registered MchdCryptoServer.dll
+
 #C:\Windows\Microsoft.NET\Framework64\v4.0.30319\RegAsm.exe /registered MchdCryptoServer.dll
 #C:\Windows\Microsoft.NET\Framework\v4.0.30319\RegAsm.exe /registered MchdCryptoServer.dll
 
 
+sed -i 's/admin1/%user%/g' .wine.fss/{system,userdef,user}.reg
 
+#Удалил кеш установки x64
+rm -rf .wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/SetupCache/
+#Для x32
+rm -rf .wine.fss/drive_c/windows/Microsoft.NET/Framework/v4.0.30319/SetupCache/
 
+#########################
+
+ Запуск через скрипт в /usr/bin/run_fss.sh
+
+#!/bin/bash
+
+export WINEPREFIX=$HOME/.wine.fss
+/opt/cprocsp/bin/amd64/certmgr -delete -all -store uMy
+/opt/cprocsp/bin/amd64/csptestf -absorb -certs
+/opt/cprocsp/bin/amd64/certmgr -inst -store uMy -file "/opt/certs/cert.cer"
+wine reg delete 'HKEY_CURRENT_USER\Software\Microsoft\SystemCertificates\My\Certificates\' /f
+
+/usr/bin/cpcsp_proxy_setup
+
+cd $HOME/.wine.fss/drive_c/Fss*
+env WINEPREFIX=$HOME/.wine.fss wine fss_mo.exe
