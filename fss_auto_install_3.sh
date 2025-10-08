@@ -1,5 +1,8 @@
  #!/bin/bash
 
+LOGFILE=/tmp/fss_install.log
+exec > >(tee -a $LOGFILE)
+
 if [ $(whoami) = root ]; then
     echo
 else
@@ -9,8 +12,6 @@ fi
 
 #чек версии wine
 check_wine=$(wine --version | head -n1  | awk '{print $1;}' | cut -d "-" -f2)
-
-exec > /tmp/fss_install.log 2>&1
 
 color1b="\033[37;1;41m"
 color1e="\033[0m"
@@ -163,8 +164,8 @@ install_fss_wine_10.2() {
     read inputval5
     if [ "$inputval5" == "1" ]; then
         su - ${user1} -c "env -i wget --progress=bar:force --no-cache -P /tmp/ http://10.11.128.115/.pcstuff/test/fss/fss_ers_setup_3_0_42_20250902_01_x64.exe"
-        su - ${user1} -c "cp -r /etc/skel/.wine /home/'$user1'/.wine.fss"
-        su - ${user1} -c "rm -rf /home/'$user1'/.wine.fss/drive_c/Vitacore/"
+        su - ${user1} -c "cp -r /etc/skel/.wine .wine.fss"
+        su - ${user1} -c "rm -rf .wine.fss/drive_c/Vitacore/"
         su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/var/run/lightdm/user/xauthority WINEPREFIX=~/.wine.fss wine /tmp/fss_ers_setup_3_0_42_20250902_01_x64.exe"
         su - ${user1} -c "cd ~/.wine.fss/drive_c/FssArmErs/ && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll"
         rm -f /tmp/fss_ers_setup_3_0_42_20250902_01_x64.exe
@@ -173,8 +174,8 @@ install_fss_wine_10.2() {
         fi
     elif [ "$inputval5" == "2" ]; then
         su - ${user1} -c "env -i wget --progress=bar:force --no-cache -P /tmp/ http://10.11.128.115/.pcstuff/test/fss/fss_eln_setup_2_01_26_20250902_01_x64.exe"
-        su - ${user1} -c "cp -r /etc/skel/.wine /home/'$user1'/.wine.fss"
-        su - ${user1} -c "rm -rf /home/'$user1'/.wine.fss/drive_c/Vitacore/"
+        su - ${user1} -c "cp -r /etc/skel/.wine .wine.fss"
+        su - ${user1} -c "rm -rf .wine.fss/drive_c/Vitacore/"
         su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/var/run/lightdm/user/xauthority WINEPREFIX=~/.wine.fss wine /tmp/fss_eln_setup_2_01_26_20250902_01_x64.exe"
         su - ${user1} -c "cd ~/.wine.fss/drive_c/FssArmErs/ && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll"
         rm -f /tmp/fss_eln_setup_2_01_26_20250902_01_x64.exe
