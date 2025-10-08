@@ -10,9 +10,9 @@ my_hostname=$(hostname | cut -d "." -f1)
 read -p "Введите IP-адрес домена: " inputval
 domen_ip=$inputval
 
-#ввести рабочую группу домена
-read -p "Введите рабочую группу домена: " inputval2
-domen_work=$inputval2
+#ввести NetBIOS-имя
+read -p "Введите NetBIOS-имя домена: " inputval2
+domen_netbios=$inputval2
 
 #ввести имя домена
 read -p "Имя домена: " inputval3
@@ -59,7 +59,7 @@ read -p "Введите пароль админа домена: " inputval5
 domen_pass=$inputval5
 
 #/usr/sbin/system-auth write ad мой.домен имя_лин_пк рабочая_группа имя_пользователя пароль
-/usr/sbin/system-auth write ad $my_domen $my_hostname $domen_work $domen_admin $domen_pass
+/usr/sbin/system-auth write ad $my_domen $my_hostname $domen_netbios $domen_admin $domen_pass
 
 #Добавляем роль всем пользователям для работы из сетевых папок в wps
 roleadd users fuse
