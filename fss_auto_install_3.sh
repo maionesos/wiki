@@ -167,7 +167,7 @@ install_fss_wine_10.2() {
         su - ${user1} -c "cp -r /etc/skel/.wine .wine.fss"
         su - ${user1} -c "rm -rf .wine.fss/drive_c/Vitacore/"
         su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/var/run/lightdm/user/xauthority WINEPREFIX=~/.wine.fss wine /tmp/fss_ers_setup_3_0_42_20250902_01_x64.exe"
-        su - ${user1} -c "cd ~/.wine.fss/drive_c/FssArmErs/ && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll"
+        su - ${user1} -c "cd ~/.wine.fss/drive_c/Fss* && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll"
         rm -f /tmp/fss_ers_setup_3_0_42_20250902_01_x64.exe
         if [ -f "$test_file" ]; then
             install_bd_for_ers
@@ -177,7 +177,7 @@ install_fss_wine_10.2() {
         su - ${user1} -c "cp -r /etc/skel/.wine .wine.fss"
         su - ${user1} -c "rm -rf .wine.fss/drive_c/Vitacore/"
         su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/var/run/lightdm/user/xauthority WINEPREFIX=~/.wine.fss wine /tmp/fss_eln_setup_2_01_26_20250902_01_x64.exe"
-        su - ${user1} -c "cd ~/.wine.fss/drive_c/FssArmErs/ && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll"
+        su - ${user1} -c "cd ~/.wine.fss/drive_c/Fss* && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll"
         rm -f /tmp/fss_eln_setup_2_01_26_20250902_01_x64.exe
         if [ -f "$test_file" ]; then
             install_bd_for_eln
