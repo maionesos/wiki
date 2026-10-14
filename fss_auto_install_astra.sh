@@ -54,6 +54,9 @@ if [[ "$date_pc" -le "$date_fsr_cert" ]]; then
 	mv /tmp/sfr_prod_cert_2025.cer /opt/certs/cert.cer
 fi
 
+# Чек установлена ли БД
+bd_check_install=$(dpkg-query -f='${Status}\n' -W postgresql-client-11)
+
 # Установка БД
 test_file=/tmp/fss_log_bd
 
@@ -95,16 +98,15 @@ check_bd_table () {
       if test "$inputval_table_check" == "del"; then
         psql -p 5433 -U postgres -c "DROP DATABASE fss;"
       fi
+    else
+      install_bd_postgres
     fi
 }
 
-# Чек установлена ли БД
-bd_check_install=$(dpkg-query -f='${Status}\n' -W postgresql-client-11)
-
+# Проверка, установленна ли бд
 if [ "$bd_check_install" == "install ok installed" ]; then
   echo -en "$color1b База данных postgresql-11 уже установлена! Пропуск шага. $color2e\n"
 else
-  install_bd_postgres
   check_bd_table
 fi
 
@@ -142,14 +144,14 @@ if [[ "$check_wine" == "$check_wine_10_6" || "$check_wine_10_8" ]]; then
   if [[ -d "$check_bottle" ]]; then
     mv /home/${user1}/.wine.fss /home/${user1}/.wine.fss_"$date_bak"
   fi
-  su - ${user1} -c "cp -vr /etc/skel/.wine /home/'$user1'/.wine.fss && rm -rf /home/'$user1'/.wine.fss/drive_c/Vitacore" || exit 1
+  su - ${user1} -c "echo 'Копируется префикс...' && cp -r /etc/skel/.wine /home/'$user1'/.wine.fss && rm -rf /home/'$user1'/.wine.fss/drive_c/Vitacore" || exit 1
 fi
 }
 
 # Установка ФСС
 install_fss_wine_10_ers() {
   check_bottle_10
-  su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/var/run/lightdm/'$user1'/xauthority WINEPREFIX=~/.wine.fss wine '$selected_program' >/dev/null 2>&1"
+  su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/var/run/lightdm/'$user1'/xauthority WINEPREFIX=~/.wine.fss wine '$selected_program' >/dev/null 2>&1" || exit 1
   su - ${user1} -c "cd ~/.wine.fss/drive_c/Fss* && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll >/dev/null 2>&1"
   desktop_ers=СФР\ АРМ\ ЛПУ\(ЭРС\).desktop
   sed -i -e '/Exec/s/^/#/' -e '/Path/s/^/#/' "$destop_base$desktop_ers"
@@ -199,3 +201,4 @@ mv /tmp/run_fss_wine_10.sh /usr/bin/run_fss.sh
 chmod 755 /usr/bin/run_fss.sh
 
 echo -en "$color1b ФСС Установлено! $color1e\n"
+
