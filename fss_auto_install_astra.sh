@@ -46,13 +46,16 @@ if ! test -d /opt/certs; then
 	chmod 777 /opt/certs
 fi
 
-date_pc=$(date +%s)
-date_fsr_cert_end='1790974800'
+#date_pc=$(date +%s)
+#date_fsr_cert_end='1790974800'
 
-if [[ "$date_pc" -le "$date_fsr_cert" ]]; then
-	env -i wget -nv --no-cache -P /tmp/ http://lk.fss.ru/sfr_certs_2025/sfr_prod_cert_2025.cer
-	mv /tmp/sfr_prod_cert_2025.cer /opt/certs/cert.cer
-fi
+#if [[ "$date_pc" -le "$date_fsr_cert" ]]; then
+#	env -i wget -nv --no-cache -P /tmp/ http://lk.fss.ru/sfr_certs_2025/sfr_prod_cert_2025.cer
+#	mv /tmp/sfr_prod_cert_2025.cer /opt/certs/cert.cer
+#fi
+
+env -i wget -nv --no-cache -P /tmp/ http://lk.fss.ru/sfr_certs_2026/%D0%A4%D0%9E%D0%9D%D0%94%20%D0%9F%D0%95%D0%9D%D0%A1%D0%98%D0%9E%D0%9D%D0%9D%D0%9E%D0%93%D0%9E%20%D0%98%20%D0%A1%D0%9E%D0%A6%D0%98%D0%90%D0%9B%D0%AC%D0%9D%D0%9E%D0%93%D0%9E%20%D0%A1%D0%A2%D0%A0%D0%90%D0%A5%D0%9E%D0%92%D0%90%D0%9D%D0%98%D0%AF%20%D0%A0%D0%9E%D0%A1%D0%A1%D0%98%D0%99%D0%A1%D0%9A%D0%9E%D0%99%20%D0%A4%D0%95%D0%94%D0%95%D0%A0%D0%90%D0%A6%D0%98%D0%98.cer
+mv /tmp/'ФОНД ПЕНСИОННОГО И СОЦИАЛЬНОГО СТРАХОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ.cer' /opt/certs/cert.cer
 
 # Чек установлена ли БД
 bd_check_install=$(dpkg-query -f='${Status}\n' -W postgresql-client-11)
@@ -144,14 +147,14 @@ if [[ "$check_wine" == "$check_wine_10_6" || "$check_wine_10_8" ]]; then
   if [[ -d "$check_bottle" ]]; then
     mv /home/${user1}/.wine.fss /home/${user1}/.wine.fss_"$date_bak"
   fi
-  su - ${user1} -c "echo 'Копируется префикс...' && cp -r /etc/skel/.wine /home/'$user1'/.wine.fss && rm -rf /home/'$user1'/.wine.fss/drive_c/Vitacore" || exit 1
+  su - ${user1} -c "echo 'Копируется префикс...' && cp -vr /etc/skel/.wine /home/'$user1'/.wine.fss && rm -rf /home/'$user1'/.wine.fss/drive_c/Vitacore" || exit 1
 fi
 }
 
 # Установка ФСС
 install_fss_wine_10_ers() {
   check_bottle_10
-  su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/var/run/lightdm/'$user1'/xauthority WINEPREFIX=~/.wine.fss wine '$selected_program' >/dev/null 2>&1" || exit 1
+  su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/home/'$user1'/.Xauthority WINEPREFIX=~/.wine.fss wine '$selected_program' >/dev/null 2>&1" || exit 1
   su - ${user1} -c "cd ~/.wine.fss/drive_c/Fss* && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll >/dev/null 2>&1"
   desktop_ers=СФР\ АРМ\ ЛПУ\(ЭРС\).desktop
   sed -i -e '/Exec/s/^/#/' -e '/Path/s/^/#/' "$destop_base$desktop_ers"
@@ -163,7 +166,7 @@ install_fss_wine_10_ers() {
 
 install_fss_wine_10_eln() {
   check_bottle_10
-  su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/var/run/lightdm/'$user1'/xauthority WINEPREFIX=~/.wine.fss wine '$selected_program' >/dev/null 2>&1"
+  su - ${user1} -c "DISPLAY=:0.0 XAUTHORITY=/home/'$user1'/.Xauthority WINEPREFIX=~/.wine.fss wine '$selected_program' >/dev/null 2>&1"
   su - ${user1} -c "cd ~/.wine.fss/drive_c/Fss* && WINEPREFIX=~/.wine.fss wine ~/.wine.fss/drive_c/windows/Microsoft.NET/Framework64/v4.0.30319/RegAsm.exe /registered GostCryptography.dll >/dev/null 2>&1"
   desktop_eln=СФР\ АРМ\ ЛПУ.desktop
   sed -i -e '/Exec/s/^/#/' -e '/Path/s/^/#/' "$destop_base$desktop_eln"
@@ -201,4 +204,3 @@ mv /tmp/run_fss_wine_10.sh /usr/bin/run_fss.sh
 chmod 755 /usr/bin/run_fss.sh
 
 echo -en "$color1b ФСС Установлено! $color1e\n"
-
